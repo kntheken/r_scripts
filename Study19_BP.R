@@ -1,9 +1,9 @@
 ##Read in data##
-data_BP=read.csv("./r_scripts/source_data/Study26_BP.csv")
+data_BP=read.csv("./r_scripts/source_data/Study19.csv")
 str(data_BP)
 
 library(readxl)
-mouse_id=read_excel("./r_scripts/source_data/BP_study_mouse_info.xlsx",sheet="Study26")
+mouse_id=read_excel("./r_scripts/source_data/BP_study_mouse_info.xlsx",sheet="Study19")
 
 library(tidyr)
 library(chron)
@@ -12,20 +12,12 @@ library (ggplot2)
 library(reshape)
 
 ##Reformat to split by measurement and position##
-data_BP2=gather(data_BP, key="Measurement", value="Value", -c("Time","Period"))%>% 
+data_BP2=gather(data_BP, key="Measurement", value="Value", -c("Time","Period", "Phase"))%>% 
 separate(col="Measurement", into=c("Position","Measurement"))
 
 ##Convert times##
 data_BP2$Time2=as.POSIXlt(data_BP2$Time, "%m/%d/%Y %H:%M", tz="")
 
-
-##converts to character##
-data_BP2$Time3=format(as.POSIXct(data_BP2$Time2),format="%H:%M")
-
-##Add active/rest phase and other variables##
-data_BP2$Phase=ifelse(data_BP2$Time2$hour>=19|data_BP2$Time2$hour<7, "active", "rest")
-data_BP2$Period.Phase=with(data_BP2, interaction(Period,Phase))
-data_BP2$Period_time=ifelse(data_BP2$Period=="baseline", as.numeric(difftime(data_BP2$Time2, "2016-10-28 0:00:00")), ifelse(data_BP2$Period=="HSD2", as.numeric(difftime(data_BP2$Time2, "2016-11-11 0:00:00")),as.numeric(difftime(data_BP2$Time2, "2016-11-25 0:00:00"))))
 
 ##Set non-physiologic values to NA##
 data_BP2$Value=ifelse(data_BP2$Measurement=="Diastolic" & data_BP2$Value<=30,NA, data_BP2$Value)
@@ -47,21 +39,18 @@ sem=function (x) {sd(x, na.rm=TRUE)/sqrt(length(x))}
 
 summary_BP=subset(data_BP2, select=-Time2) %>% group_by(Position,Period,Phase,Measurement) %>% summarize (average=mean(Value, na.rm=TRUE), sd=sd(Value, na.rm=TRUE),sem=sem(Value))
 
-##Exclude first week of HSD and cele+HSD measurements##
-summary_BPa=subset(summary_BP, Period == "HSD+cele2"| Period =="HSD2" |Period=="baseline")
-summary_BPa$Period=ifelse(summary_BPa$Period=="HSD2","HSD",ifelse(summary_BPa$Period=="HSD+cele2","HSD+cele","baseline"))
 
 summary_BP2=subset(summary_BP, select=-c(sd,sem))%>% spread(key=Phase,value=average)
 summary_BP2$percent.dip=(summary_BP2$active-summary_BP2$rest)*100/summary_BP2$active
 summary_BP2$delta.dip=summary_BP2$active-summary_BP2$rest
 
-summary_BP3=subset(summary_BPa, select=-c(sd,sem))%>% unite(col=MPP, Measurement,Period, Phase, sep=".") %>% spread(key=MPP,value=average)
+summary_BP3=subset(summary_BP, select=-c(sd,sem))%>% unite(col=MPP, Measurement,Period, Phase, sep=".") %>% spread(key=MPP,value=average)
 
 BP1=merge(mouse_id,summary_BP,  by="Position")
 BP2=merge( mouse_id, summary_BP2, by= "Position")
 BP3=merge(mouse_id, summary_BP3, by="Position")
 
-write.csv(BP3, file="Study26BP_summary.csv")
+write.csv(BP3, file="Study19BP_summary.csv")
 
 
 data_BP2$Period_time=as.numeric(difftime(data_BP2$Time2, "2016-10-28 0:00:00"))

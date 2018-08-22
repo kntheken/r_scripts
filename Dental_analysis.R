@@ -1,13 +1,7 @@
 ##Read in data##
-data_wide=read.csv("Dental_master_wide.csv")
-data_long=read.csv("Dental_master_long.csv")
-pre=read.csv("Pre_rCBF.csv")
-post=read.csv("Post_rCBF.csv")
-post1=read.csv("Post1_rCBF.csv")
-post2=read.csv("Post2_rCBF.csv")
-post3=read.csv("Post3_rCBF.csv")
-post4=read.csv("Post4_rCBF.csv")
-data_luminex=read.csv("Dental_luminex.csv")
+data_wide=read.csv("./r_scripts/source_data/Dental_master_wide.csv")
+data_long=read.csv("./r_scripts/source_data/Dental_master_long.csv")
+data_luminex=read.csv("./r_scripts/source_data/Dental_luminex.csv")
 
 
 ##Change Values to numeric and Dates to Date format##
@@ -24,25 +18,28 @@ data_wide$Demo_Gender=as.factor(data_wide$Demo_Gender)
 data_wide$Weight=data_wide$Demo_Wt/2.2
 data_wide$Height=data_wide$Height_Inch*0.0254
 data_wide$Discharge.Time=strptime(data_wide$Discharge.Time,format="%H:%M")
-data_wide$Drug.Time=strptime(data_wide$Drug.Time,format="%H:%M")
-data_wide$DOS_Surgery_Start=strptime(data_wide$DOS_Surgery_Start,format="%H:%M")
-data_wide$DOS_Surgery_Stop=strptime(data_wide$DOS_Surgery_Stop,format="%H:%M")
-data_wide$Basal.blood.time=strptime(data_wide$Basal.blood.time,format="%H:%M")
-data_wide$Basal.urine.time=strptime(data_wide$Basal.urine.time,format="%H:%M")
-data_wide$PS1.blood.time=strptime(data_wide$PS1.blood.time,format="%H:%M")
-data_wide$PS1.urine.time=strptime(data_wide$PS1.urine.time,format="%H:%M")
-data_wide$PS2.blood.time=strptime(data_wide$PS2.blood.time,format="%H:%M")
-data_wide$PS2.urine.time=strptime(data_wide$PS2.urine.time,format="%H:%M")
-data_wide$Rescue.Time1=strptime(data_wide$Rescue.Time1,format="%H:%M")
+data_wide$Drug.Time=strptime(as.character(data_wide$Drug.Time),format="%H:%M")
+data_wide$DOS_Surgery_Start=strptime(as.character(data_wide$DOS_Surgery_Start),format="%H:%M")
+data_wide$DOS_Surgery_Stop=strptime(as.character(data_wide$DOS_Surgery_Stop),format="%H:%M")
+data_wide$Basal.blood.time=strptime(as.character(data_wide$Basal.blood.time),format="%H:%M")
+data_wide$Basal.urine.time=strptime(as.character(data_wide$Basal.urine.time),format="%H:%M")
+data_wide$PS1.blood.time=strptime(as.character(data_wide$PS1.blood.time),format="%H:%M")
+data_wide$PS1.urine.time=strptime(as.character(data_wide$PS1.urine.time),format="%H:%M")
+data_wide$PS2.blood.time=strptime(as.character(data_wide$PS2.blood.time),format="%H:%M")
+data_wide$PS2.urine.time=strptime(as.character(data_wide$PS2.urine.time),format="%H:%M")
+data_wide$Rescue.Time1=strptime(as.character(data_wide$Rescue.Time1),format="%H:%M")
 data_wide$Surgery.basal.time=difftime(data_wide$Basal.blood.time,data_wide$DOS_Surgery_Stop, units="hours")
 data_wide$Surgery.PS1.time=difftime(data_wide$PS1.blood.time,data_wide$DOS_Surgery_Stop, units="hours")
 data_wide$Surgery.PS2.time=difftime(data_wide$PS2.blood.time,data_wide$DOS_Surgery_Stop, units="hours")
+data_wide$Surgery.Drug.time=difftime(data_wide$Drug.Time,data_wide$DOS_Surgery_Stop, units="hours")
 
 ##Create Responder Status variable##
 data_wide$Status=ifelse(data_wide$Group=="Ibuprofen"& data_wide$Rescue=="N","Responder",ifelse(data_wide$Group=="Ibuprofen"& data_wide$Rescue=="Y","Non-Responder","Placebo"))
 data_wide$Status2=factor(data_wide$Status, levels=c("Placebo", "Non-Responder", "Responder"))
 data_long$Status=ifelse(data_long$Group=="Ibuprofen"& data_long$Rescue=="N","Responder",ifelse(data_long$Group=="Ibuprofen"& data_long$Rescue=="Y","Non-Responder","Placebo"))
 data_long$Status2=factor(data_long$Status, levels=c("Placebo", "Non-Responder", "Responder"))
+
+groups=subset(data_wide,select=c(Subject,Demo_Gender,Group,Status2))
 
 ##Create Percent Baseline variables##
 data_wide$PTGS1.PS1.percent=(data_wide$PTGS1.PS1*100)/data_wide$PTGS1.basal
@@ -92,94 +89,12 @@ data_luminex$TNFa.PS2.percent=(data_luminex$TNFa.PS2*100)/data_luminex$TNFa.basa
 data_wide$PS1.pain.percent=(data_wide$PS1.Pain*100)/data_wide$End1.pain.score
 data_wide$PS2.pain.percent=(data_wide$PS2.Pain*100)/data_wide$End1.pain.score
 
-##Making basal,PS1, and PS2 data sets##
-basal=data_wide[c("Subject","Demo_Gender","Age","Status2","DOS_Trauma_SUM","Drug.Time","Surgery.basal.time","Ibuprofen.basal","APAP.basal","COX.1.basal","COX.2.basal","PGEM.basal","PGDM.basal","PGIM.basal","TxM.basal","PTGS1.basal","PTGS2.basal","PACER.basal")]
-basal$COX.1.percent=100
-basal$COX.2.percent=100
-basal$PGEM.percent=100
-basal$PGDM.percent=100
-basal$PGIM.percent=100
-basal$TxM.percent=100
-basal$PTGS1.percent=100
-basal$PTGS2.percent=100
-basal$PACER.percent=100
-basal$Event="Baseline"
-PS1=data_wide[c("Subject","Demo_Gender","Age","Status2","DOS_Trauma_SUM","Drug.Time","Surgery.PS1.time","Ibuprofen.PS1","APAP.PS1","COX.1.PS1","COX.2.PS1","PGEM.PS1","PGDM.PS1","PGIM.PS1","TxM.PS1","COX.1.PS1.percent","COX.2.PS1.percent","PGEM.PS1.percent","PGDM.PS1.percent","PGIM.PS1.percent","TxM.PS1.percent","PTGS1.PS1","PTGS2.PS1","PACER.PS1","PTGS1.PS1.percent","PTGS2.PS1.percent","PACER.PS1.percent")]
-PS1$Event="Post-surgery 1"
-PS2=data_wide[c("Subject","Demo_Gender","Age","Status2","DOS_Trauma_SUM","Drug.Time","Surgery.PS2.time","Ibuprofen.PS2","APAP.PS2","COX.1.PS2","COX.2.PS2","PGEM.PS2","PGDM.PS2","PGIM.PS2","TxM.PS2","COX.1.PS2.percent","COX.2.PS2.percent","PGEM.PS2.percent","PGDM.PS2.percent","PGIM.PS2.percent","TxM.PS2.percent","PTGS1.PS2","PTGS2.PS2","PACER.PS2","PTGS1.PS2.percent","PTGS2.PS2.percent","PACER.PS2.percent")]
-PS2$Event="Post-surgery 2"
-
-luminex_basal=data_luminex[c("Subject","IL10.basal","IL1b.basal","IL6.basal","IL8.basal","MCP1.basal","TNFa.basal")]
-luminex_basal$IL10.basal.percent=100
-luminex_basal$IL1b.basal.percent=100
-luminex_basal$IL6.basal.percent=100
-luminex_basal$IL8.basal.percent=100
-luminex_basal$MCP1.basal.percent=100
-luminex_basal$TNFa.basal.percent=100
-luminex_basal$Event="Baseline"
-luminex_PS1=data_luminex[c("Subject","IL10.PS1","IL1b.PS1","IL6.PS1","IL8.PS1","MCP1.PS1","TNFa.PS1","IL10.PS1.percent","IL1b.PS1.percent","IL6.PS1.percent","IL8.PS1.percent","MCP1.PS1.percent","TNFa.PS1.percent")]
-luminex_PS1$Event="Post-surgery 1"
-luminex_PS2=data_luminex[c("Subject","IL10.PS2","IL1b.PS2","IL6.PS2","IL8.PS2","MCP1.PS2","TNFa.PS2","IL10.PS2.percent","IL1b.PS2.percent","IL6.PS2.percent","IL8.PS2.percent","MCP1.PS2.percent","TNFa.PS2.percent")]
-luminex_PS2$Event="Post-surgery 2"
-
-detach(package:dplyr)
-library(plyr)
-basal=rename(basal, c("Surgery.basal.time"="Time","Ibuprofen.basal"="Ibuprofen","APAP.basal"="APAP","COX.1.basal"="COX.1","COX.2.basal"="COX.2","PGEM.basal"="PGEM","PGDM.basal"="PGDM","PGIM.basal"="PGIM","TxM.basal"="TxM","PTGS1.basal"="PTGS1","PTGS2.basal"="PTGS2","PACER.basal"="PACER"))
-PS1=rename(PS1,c("Surgery.PS1.time"="Time","Ibuprofen.PS1"="Ibuprofen","APAP.PS1"="APAP","COX.1.PS1"="COX.1","COX.2.PS1"="COX.2","PGEM.PS1"="PGEM","PGDM.PS1"="PGDM","PGIM.PS1"="PGIM","TxM.PS1"="TxM","COX.1.PS1.percent"="COX.1.percent","COX.2.PS1.percent"="COX.2.percent","PGEM.PS1.percent"="PGEM.percent","PGDM.PS1.percent"="PGDM.percent","PGIM.PS1.percent"="PGIM.percent","TxM.PS1.percent"="TxM.percent","PTGS1.PS1"="PTGS1","PTGS2.PS1"="PTGS2","PACER.PS1"="PACER","PTGS1.PS1.percent"="PTGS1.percent","PTGS2.PS1.percent"="PTGS2.percent","PACER.PS1.percent"="PACER.percent"))
-PS2=rename(PS2,c("Surgery.PS2.time"="Time","Ibuprofen.PS2"="Ibuprofen","APAP.PS2"="APAP","COX.1.PS2"="COX.1","COX.2.PS2"="COX.2","PGEM.PS2"="PGEM","PGDM.PS2"="PGDM","PGIM.PS2"="PGIM","TxM.PS2"="TxM","COX.1.PS2.percent"="COX.1.percent","COX.2.PS2.percent"="COX.2.percent","PGEM.PS2.percent"="PGEM.percent","PGDM.PS2.percent"="PGDM.percent","PGIM.PS2.percent"="PGIM.percent","TxM.PS2.percent"="TxM.percent","PTGS1.PS2"="PTGS1","PTGS2.PS2"="PTGS2","PACER.PS2"="PACER","PTGS1.PS2.percent"="PTGS1.percent","PTGS2.PS2.percent"="PTGS2.percent","PACER.PS2.percent"="PACER.percent"))
-
-luminex_basal=rename(luminex_basal, c("IL10.basal"="IL10","IL1b.basal"="IL1b","IL6.basal"="IL6","IL8.basal"="IL8","MCP1.basal"="MCP1","TNFa.basal"="TNFa","IL10.basal.percent"="IL10.percent","IL1b.basal.percent"="IL1b.percent","IL6.basal.percent"="IL6.percent","IL8.basal.percent"="IL8.percent","MCP1.basal.percent"="MCP1.percent","TNFa.basal.percent"="TNFa.percent"))
-luminex_PS1=rename(luminex_PS1,c("IL10.PS1"="IL10","IL1b.PS1"="IL1b","IL6.PS1"="IL6","IL8.PS1"="IL8","MCP1.PS1"="MCP1","TNFa.PS1"="TNFa","IL10.PS1.percent"="IL10.percent","IL1b.PS1.percent"="IL1b.percent","IL6.PS1.percent"="IL6.percent","IL8.PS1.percent"="IL8.percent","MCP1.PS1.percent"="MCP1.percent","TNFa.PS1.percent"="TNFa.percent"))
-luminex_PS2=rename(luminex_PS2,c("IL10.PS2"="IL10","IL1b.PS2"="IL1b","IL6.PS2"="IL6","IL8.PS2"="IL8","MCP1.PS2"="MCP1","TNFa.PS2"="TNFa","IL10.PS2.percent"="IL10.percent","IL1b.PS2.percent"="IL1b.percent","IL6.PS2.percent"="IL6.percent","IL8.PS2.percent"="IL8.percent","MCP1.PS2.percent"="MCP1.percent","TNFa.PS2.percent"="TNFa.percent"))
-
-lumbasal.PS1=rbind(luminex_basal,luminex_PS1)
-luminex=rbind(lumbasal.PS1,luminex_PS2)
-
-basal.PS1=rbind(basal,PS1)
-measurement=rbind(basal.PS1,PS2)
-
-
-luminex.all=merge(luminex,measurement, by=c("Subject","Event"))
-
-baseline=data_wide[c("Subject","Age","Weight","Height","Demo_Gender","Status2","Group","Number_Teeth","DOS_Trauma_SUM","Length_Surgery","End1.pain.score","Pain.relief.score","Ibuprofen.basal","APAP.basal","COX.1.basal","COX.2.basal","PGEM.basal","PGDM.basal","PGIM.basal","TxM.basal","PTGS1.basal","PTGS2.basal","PACER.basal","deltaTdrug.PS1blood","EvalPain_Relief_Rate","Ibuprofen.PS1","APAP.PS1","COX.1.PS1","COX.2.PS1","PGEM.PS1","PGDM.PS1","PGIM.PS1","TxM.PS1","COX.1.PS1.percent","COX.2.PS1.percent","PGEM.PS1.percent","PGDM.PS1.percent","PGIM.PS1.percent","TxM.PS1.percent","PTGS1.PS1","PTGS2.PS1","PACER.PS1","PTGS1.PS1.percent","PTGS2.PS1.percent","PACER.PS1.percent","Ibuprofen.PS2","APAP.PS2","COX.1.PS2","COX.2.PS2","PGEM.PS2","PGDM.PS2","PGIM.PS2","TxM.PS2","COX.1.PS2.percent","COX.2.PS2.percent","PGEM.PS2.percent","PGDM.PS2.percent","PGIM.PS2.percent","TxM.PS2.percent","PTGS1.PS2","PTGS2.PS2","PACER.PS2","PTGS1.PS2.percent","PTGS2.PS2.percent","PACER.PS2.percent")]
-
-all_bio=merge(baseline,data_luminex, by="Subject")
-all_bio.i=all_bio[which(all_bio$Status2!="Placebo"),]
 
 ##Calculating end time in hours for survival curve##
 data_wide$End.Time=ifelse(data_wide$Rescue=="Y",(data_wide$Rescue.Time1-data_wide$Drug.Time)/60,data_wide$Discharge.Time-data_wide$Drug.Time)
 
 data_wide$End.Time2=ifelse(data_wide$Rescue=="Y",(data_wide$Rescue.Time1-data_wide$Drug.Time)/60,4)
 
-
-
-
-##Merging rCBF vertically##
-prepost=rbind(pre,post)
-post12=rbind(post1,post2)
-post34=rbind(post4,post4)
-post14=rbind(post12,post34)
-rCBF_all=rbind(prepost,post14)
-rCBF_all$Time=strptime(rCBF_all$Time,format="%H:%M")
-rCBF_all$Drug.Time=strptime(rCBF_all$Drug.Time,format="%H:%M")
-response=data_wide[c("Subject","Status2")]
-rCBF_all_response=merge(rCBF_all,response, by="Subject")
-rCBF_all_response$dTime=(rCBF_all_response$Time-rCBF_all_response$Drug.Time)
-
-##Reshape and merge rCBF data horizontally##
-library(reshape2)
-pre_melt=melt(pre,id.vars="Subject",variable.name="Region",value.name="Pre")
-post_melt=melt(post,id.vars="Subject",variable.name="Region",value.name="Post")
-post1_melt=melt(post1,id.vars="Subject",variable.name="Region",value.name="Post1")
-post2_melt=melt(post2,id.vars="Subject",variable.name="Region",value.name="Post2")
-post3_melt=melt(post3,id.vars="Subject",variable.name="Region",value.name="Post3")
-post4_melt=melt(post4,id.vars="Subject",variable.name="Region",value.name="Post4")
-
-post01=merge(post_melt,post1_melt,by=c("Subject","Region"))
-post23=merge(post2_melt,post3_melt,by=c("Subject","Region"))
-post03=merge(post01,post23,by=c("Subject","Region"))
-post04=merge(post03,post4_melt,by=c("Subject","Region"))
-rCBF=merge(post04,pre_melt,by=c("Subject","Region"))
 
 ##Create responder status by pain relief descriptors##
 data_wide$Status_PRR50=factor(ifelse(data_wide$Group=="Ibuprofen"& data_wide$EvalPain_Relief_Rate>=50,"Responder",ifelse(data_wide$Group=="Ibuprofen"& data_wide$EvalPain_Relief_Rate<50,"Non-Responder","Placebo")),levels=c("Placebo", "Non-Responder", "Responder"))
@@ -207,170 +122,6 @@ data_wide$Status_Comp=factor(ifelse(data_wide$Group=="Ibuprofen"& data_wide$Resp
 data_wide$Ke=(log(data_wide$Ibuprofen.PS1)-log(data_wide$Ibuprofen.PS2))/(data_wide$deltaTdrug.PS2blood-data_wide$deltaTdrug.PS1blood)
 data_wide$half.life=log(2)/data_wide$Ke
 
-##Create subsets for each brain region##
-insula=rCBF[which(rCBF$Region=="Insula"),]
-S1=rCBF[which(rCBF$Region=="S1"),]
-S2=rCBF[which(rCBF$Region=="S2"),]
-thalamus=rCBF[which(rCBF$Region=="Thalamus"),]
-ACC=rCBF[which(rCBF$Region=="ACC"),]
-amygdala=rCBF[which(rCBF$Region=="Amygdala"),]
-hippocampus=rCBF[which(rCBF$Region=="Hippocampus"),]
-parahippocampus=rCBF[which(rCBF$Region=="Parahippocampus"),]
-pain=rCBF[which(rCBF$Region=="Pain"),]
-response=data_wide[c("Subject","Status2")]
-rCBF_full=merge(rCBF,response,by="Subject")
-
-library(reshape)
-rCBF_melt=melt(rCBF_full, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-rCBF_post_melt=rCBF_melt[which(rCBF_melt$Time!="Pre"),]
-mean_rCBF=cast(rCBF_post_melt,Subject~Region,mean, na.rm=TRUE)
-mean_rCBF_full=merge(mean_rCBF,response, by="Subject")
-write.csv(rCBF_full,file="Dental_Pain_rCBF.csv")
-
-detach(package:reshape)
-library(reshape2)
-insula_response=merge(insula,response,by="Subject")
-S1_response=merge(S1,response,by="Subject")
-S2_response=merge(S2,response,by="Subject")
-thalamus_response=merge(thalamus,response,by="Subject")
-ACC_response=merge(ACC,response,by="Subject")
-amygdala_response=merge(amygdala,response,by="Subject")
-hippocampus_response=merge(hippocampus,response,by="Subject")
-parahippocampus_response=merge(parahippocampus,response,by="Subject")
-pain_response=merge(pain,response,by="Subject")
-
-perc_pain_response=data.frame(Subject=pain_response$Subject,Status2=pain_response$Status2,Pre=pain_response$Pre*100/pain_response$Pre,Post=pain_response$Post*100/pain_response$Pre,Post1=pain_response$Post1*100/pain_response$Pre,Post2=pain_response$Post2*100/pain_response$Pre,Post3=pain_response$Post3*100/pain_response$Pre,Post4=pain_response$Post4*100/pain_response$Pre)
-
-insula_resp_melt=melt(insula_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-insula_resp_melt$Time=factor(insula_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-S1_resp_melt=melt(S1_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-S1_resp_melt$Time=factor(S1_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-S2_resp_melt=melt(S2_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-S2_resp_melt$Time=factor(S2_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-thalamus_resp_melt=melt(thalamus_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-thalamus_resp_melt$Time=factor(thalamus_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-ACC_resp_melt=melt(ACC_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-ACC_resp_melt$Time=factor(ACC_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-amygdala_resp_melt=melt(amygdala_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-amygdala_resp_melt$Time=factor(amygdala_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-hippocampus_resp_melt=melt(hippocampus_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-hippocampus_resp_melt$Time=factor(hippocampus_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-parahippocampus_resp_melt=melt(parahippocampus_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-parahippocampus_resp_melt$Time=factor(parahippocampus_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-pain_resp_melt=melt(pain_response, id.vars=c("Subject", "Region","Status2"),variable.name="Time",value.name="rCBF")
-pain_resp_melt$Time=factor(pain_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-perc_pain_resp_melt=melt(perc_pain_response, id.vars=c("Subject","Status2"),variable.name="Time",value.name="rCBF")
-perc_pain_resp_melt$Time=factor(perc_pain_resp_melt$Time,levels=c("Pre","Post","Post1","Post2","Post3","Post4"))
-
-##Limiting to Pre-Post2##
-insula_resp_melt2=insula_resp_melt[which(insula_resp_melt$Time=="Pre"|insula_resp_melt$Time=="Post"|insula_resp_melt$Time=="Post1"|insula_resp_melt$Time=="Post2"),]
-S1_resp_melt2=S1_resp_melt[which(S1_resp_melt$Time=="Pre"|S1_resp_melt$Time=="Post"|S1_resp_melt$Time=="Post1"|S1_resp_melt$Time=="Post2"),]
-S2_resp_melt2=S2_resp_melt[which(S2_resp_melt$Time=="Pre"|S2_resp_melt$Time=="Post"|S2_resp_melt$Time=="Post1"|S2_resp_melt$Time=="Post2"),]
-thalamus_resp_melt2=thalamus_resp_melt[which(thalamus_resp_melt$Time=="Pre"|thalamus_resp_melt$Time=="Post"|thalamus_resp_melt$Time=="Post1"|thalamus_resp_melt$Time=="Post2"),]
-ACC_resp_melt2=ACC_resp_melt[which(ACC_resp_melt$Time=="Pre"|ACC_resp_melt$Time=="Post"|ACC_resp_melt$Time=="Post1"|ACC_resp_melt$Time=="Post2"),]
-amygdala_resp_melt2=amygdala_resp_melt[which(amygdala_resp_melt$Time=="Pre"|amygdala_resp_melt$Time=="Post"|amygdala_resp_melt$Time=="Post1"|amygdala_resp_melt$Time=="Post2"),]
-hippocampus_resp_melt2=hippocampus_resp_melt[which(hippocampus_resp_melt$Time=="Pre"|hippocampus_resp_melt$Time=="Post"|hippocampus_resp_melt$Time=="Post1"|hippocampus_resp_melt$Time=="Post2"),]
-parahippocampus_resp_melt2=parahippocampus_resp_melt[which(parahippocampus_resp_melt$Time=="Pre"|parahippocampus_resp_melt$Time=="Post"|parahippocampus_resp_melt$Time=="Post1"|parahippocampus_resp_melt$Time=="Post2"),]
-pain_resp_melt2=pain_resp_melt[which(pain_resp_melt$Time=="Pre"|pain_resp_melt$Time=="Post"|pain_resp_melt$Time=="Post1"|pain_resp_melt$Time=="Post2"|pain_resp_melt$Time=="Post3"),]
-perc_pain_resp_melt2=perc_pain_resp_melt[which(perc_pain_resp_melt$Time=="Pre"|perc_pain_resp_melt$Time=="Post"|perc_pain_resp_melt$Time=="Post1"|perc_pain_resp_melt$Time=="Post2"|perc_pain_resp_melt$Time=="Post3"),]
-
-##Limiting to Post##
-insula_resp_melt3=insula_resp_melt[which(insula_resp_melt$Time!="Pre"),]
-S1_resp_melt3=S1_resp_melt[which(S1_resp_melt$Time!="Pre"),]
-S2_resp_melt3=S2_resp_melt[which(S2_resp_melt$Time!="Pre"),]
-thalamus_resp_melt3=thalamus_resp_melt[which(thalamus_resp_melt$Time!="Pre"),]
-ACC_resp_melt3=ACC_resp_melt[which(ACC_resp_melt$Time!="Pre"),]
-amygdala_resp_melt3=amygdala_resp_melt[which(amygdala_resp_melt$Time!="Pre"),]
-hippocampus_resp_melt3=hippocampus_resp_melt[which(hippocampus_resp_melt$Time!="Pre"),]
-parahippocampus_resp_melt3=parahippocampus_resp_melt[which(parahippocampus_resp_melt$Time!="Pre"),]
-pain_resp_melt3=pain_resp_melt[which(pain_resp_melt$Time!="Pre"),]
-perc_pain_resp_melt3=perc_pain_resp_melt[which(perc_pain_resp_melt$Time!="Pre"),]
-
-##1-way anova on average post rCBF with 3 groups##
-insula_1way=aov(Insula~Status2,mean_rCBF_full)
-S1_1way=aov(S1~Status2,mean_rCBF_full)
-S2_1way=aov(S2~Status2,mean_rCBF_full)
-thalamus_1way=aov(Thalamus~Status2,mean_rCBF_full)
-ACC_1way=aov(ACC~Status2,mean_rCBF_full)
-amygdala_1way=aov(Amygdala~Status2,mean_rCBF_full)
-hippocampus_1way=aov(Hippocampus~Status2,mean_rCBF_full)
-parahippocampus_1way=aov(Parahippocampus~Status2,mean_rCBF_full)
-
-##1-way anova on average post rCBF, ibu-treated only##
-insula_1way_ibu=aov(Insula~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-S1_1way_ibu=aov(S1~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-S2_1way_ibu=aov(S2~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-thalamus_1way_ibu=aov(Thalamus~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-ACC_1way_ibu=aov(ACC~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-amygdala_1way_ibu=aov(Amygdala~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-hippocampus_1way_ibu=aov(Hippocampus~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-parahippocampus_1way_ibu=aov(Parahippocampus~Status2,mean_rCBF_full[which(mean_rCBF_full$Status2!="Placebo"),])
-
-
-##2-way anova with 3 groups##
-insula_2way=aov(rCBF~Status2+Time,insula_resp_melt3)
-S1_2way=aov(rCBF~Status2+Time,S1_resp_melt3)
-S2_2way=aov(rCBF~Status2+Time,S2_resp_melt3)
-thalamus_2way=aov(rCBF~Status2+Time,thalamus_resp_melt3)
-ACC_2way=aov(rCBF~Status2+Time,ACC_resp_melt3)
-amygdala_2way=aov(rCBF~Status2+Time,amygdala_resp_melt3)
-hippocampus_2way=aov(rCBF~Status2+Time,hippocampus_resp_melt3)
-parahippocampus_2way=aov(rCBF~Status2+Time,parahippocampus_resp_melt3)
-
-##2-way anova, ibu treated only##
-insula_2way_ibu=aov(rCBF~Status2+Time,insula_resp_melt3[which(insula_resp_melt3$Status2!="Placebo"),])
-S1_2way_ibu=aov(rCBF~Status2+Time,S1_resp_melt3[which(S1_resp_melt3$Status2!="Placebo"),])
-S2_2way_ibu=aov(rCBF~Status2+Time,S2_resp_melt3[which(S2_resp_melt3$Status2!="Placebo"),])
-thalamus_2way_ibu=aov(rCBF~Status2+Time,thalamus_resp_melt3[which(thalamus_resp_melt3$Status2!="Placebo"),])
-ACC_2way_ibu=aov(rCBF~Status2+Time,ACC_resp_melt3[which(ACC_resp_melt3$Status2!="Placebo"),])
-amygdala_2way_ibu=aov(rCBF~Status2+Time,amygdala_resp_melt3[which(amygdala_resp_melt3$Status2!="Placebo"),])
-hippocampus_2way_ibu=aov(rCBF~Status2+Time,hippocampus_resp_melt3[which(hippocampus_resp_melt3$Status2!="Placebo"),])
-parahippocampus_2way_ibu=aov(rCBF~Status2+Time,parahippocampus_resp_melt3[which(parahippocampus_resp_melt3$Status2!="Placebo"),])
-
-summary(insula_1way)
-summary(S1_1way)
-summary(S2_1way)
-summary(thalamus_1way)
-summary(ACC_1way)
-summary(amygdala_1way)
-summary(hippocampus_1way)
-summary(parahippocampus_1way)
-
-summary(insula_2way)
-summary(S1_2way)
-summary(S2_2way)
-summary(thalamus_2way)
-summary(ACC_2way)
-summary(amygdala_2way)
-summary(hippocampus_2way)
-summary(parahippocampus_2way)
-
-summary(insula_1way_ibu)
-summary(S1_1way_ibu)
-summary(S2_1way_ibu)
-summary(thalamus_1way_ibu)
-summary(ACC_1way_ibu)
-summary(amygdala_1way_ibu)
-summary(hippocampus_1way_ibu)
-summary(parahippocampus_1way_ibu)
-
-summary(insula_2way_ibu)
-summary(S1_2way_ibu)
-summary(S2_2way_ibu)
-summary(thalamus_2way_ibu)
-summary(ACC_2way_ibu)
-summary(amygdala_2way_ibu)
-summary(hippocampus_2way_ibu)
-summary(parahippocampus_2way_ibu)
 
 
 ##Summary statistics by responder status##
@@ -751,20 +502,6 @@ ggplot(data_wide, aes(Status_Comp, PGIM.basal))+geom_boxplot(aes(fill=Demo_Gende
 dev.off()
 
 
-pdf("rCBF_over_time.pdf")
-library(Hmisc)
-
-##Individual curves all timepoints##
-ggplot(insula_resp_melt, aes(Time, rCBF, group=Status2,color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Insula", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(S1_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="S1", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(S2_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="S2", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(thalamus_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Thalamus", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(ACC_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="ACC", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(amygdala_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Amygdala", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(hippocampus_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Hippocampus", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(parahippocampus_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Parahippocampus", x="Measurement", y="rCBF")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(pain_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Pain Score", x="Measurement", y="Pain Score")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
-ggplot(perc_pain_resp_melt, aes(Time, rCBF, color=Status2))+geom_line(aes(group=Subject, size=0.5))+geom_point(aes(size=1))+labs(title="Percent of Maximum Pain Score", x="Measurement", y="Percent of Maximum Pain Score")+pub_specs+theme(legend.position="none")+scale_color_brewer(palette="Set1")
 
 pdf("DC_graphs.pdf")
 
@@ -1077,60 +814,9 @@ ggplot(data_long,aes(Time,PGIM.PC, color=Status2, group=Subject))+geom_point(siz
 ggplot(data_long,aes(Time,PGDM.PC, color=Status2, group=Subject))+geom_point(size=3)+geom_line()+geom_vline(xintercept=0)+pub_specs + labs(y="Urinary PGDM (%baseline)", x="Time Relative to Study Drug Treatment (hours)", title="PGDM")+theme(legend.position="bottom",legend.box="horizontal")
 ggplot(data_long,aes(Time,TxM.PC, color=Status2, group=Subject))+geom_point(size=3)+geom_line()+geom_vline(xintercept=0)+pub_specs + labs(y="Urinary TxM (%baseline)", x="Time Relative to Study Drug Treatment (hours)", title="TxM")+theme(legend.position="bottom",legend.box="horizontal")
 
-ggplot(data_long_i,aes(Time,Ibuprofen, color=Status2, group=Subject))+geom_point(size=3)+geom_line()+pub_specs + labs(y="Ibuprofen Plasma Concentration (micromolar)", x="Time Relative to Study Drug Treatment (hours)", title="Ibuprofen")+theme(legend.position="bottom",legend.box="horizontal")+xlim(0,5)
+ggplot(data_long_i,aes(Time,Ibuprofen, color=Status2, group= Subject))+geom_point(size=3)+geom_line()+pub_specs + labs(y="Ibuprofen Plasma Concentration (micromolar)", x="Time Relative to Study Drug Treatment (hours)", title="Ibuprofen")+theme(legend.position="bottom",legend.box="horizontal")+xlim(0,5)
 
 dev.off()
-
-##PK modeling
-
-data_ibu_long=subset(data_long, Group=="Ibuprofen")
-data_ibu_long$Ibuprofen_mgL=data_ibu_long$Ibuprofen*0.20629
-data_ibu_long$Weight=data_ibu_long$Demo_Wt/2.2
-data_ibu_long$Height=data_ibu_long$Height_Inch*0.0254
-
-
-
-library(nlme)
-data_ibu=groupedData(data=data_ibu_long, formula=Ibuprofen_mgL~Time|Subject)
-
-Ibu=nlme(Ibuprofen_mgL~SSfol(Dose,Time,lKe,lKa,lCl),
-	data=data_ibu,
-	fixed=lKe+lKa+lCl~1,
-	random=pdDiag(lKe+lKa+lCl~1),
-	na.action=na.pass,
-	control=list(maxiter=500, pnlsTol=1e-6, tolerance=2e-1))
-
-Ibu=nlme(Ibuprofen_mgL~((400/(exp(lV)))*exp(-exp(lCl-lV)*Time)),
-	data=data_ibu,
-	fixed=lV+lCl~1,
-	random=pdDiag(lV+lCl~1),
-	start=c(lCl=-1,lV=20),
-	na.action=na.exclude,
-	verbose=TRUE,
-	control=list(maxiter=500, pnlsTol=1e-5, tolerance=2e-3))
-
-Ibu=nlme(Ibuprofen_mgL~((400/V))*exp(-Cl*Time/V),
-	data=data_ibu,
-	fixed=V+Cl~1,
-	random=V+Cl~1,
-	start=c(Cl=4,V=10),
-	na.action=na.exclude,
-	verbose=TRUE,
-	control=list(maxiter=500, pnlsTol=1e-5, tolerance=2e-5))
-
-pheno=nlme(conc~phenoModel(Subject,time,dose,lCl,lV), data=data_ibu,fixed=lCl+lV~1,random=pdDiag(lCl+lV~1),start=c(-5,0),na.action=na.pass,naPattern=~!is.na(conc))
-
-
-data_r_long=subset(data_long, Status2=="Responder")
-ggplot(data_long,aes(Time, PGEM.PC,color=Status))+geom_smooth(aes(group=Status))+geom_point(size=3)+geom_vline(xintercept=0)+pub_specs + labs(x="Time relative to Study Medication (h)", y="Urinary PGEM(%baseline)", title="Post-Surgery 1")+theme(legend.position="bottom",legend.box="horizontal")
-
-ggplot(data_wide,aes(PGEM.PS1.percent,Pain.relief.score,color=Status))+geom_point(size=3)+geom_hline(yintercept=0)+pub_specs + labs(y="Pain Relief Score", x="Urinary PGEM(%baseline)", title="Post-Surgery 1")+theme(legend.position="bottom",legend.box="horizontal")
-ggplot(data_wide,aes(PGEM.PS1.percent,PS1.Pain,color=Status))+geom_point(size=3)+geom_hline(yintercept=0)+pub_specs + labs(y="Pain Relief Score", x="Urinary PGEM(%baseline)", title="Post-Surgery 1")+theme(legend.position="bottom",legend.box="horizontal")
-ggplot(data_wide,aes(COX.2.PS1.percent,PS1.pain.percent,color=Status))+geom_point(size=3)+geom_hline(yintercept=0)+pub_specs + labs(y="Pain Relief Score", x="Urinary PGEM(%baseline)", title="Post-Surgery 1")+theme(legend.position="bottom",legend.box="horizontal")
-ggplot(data_i,aes(COX.2.PS2.percent,PS2.pain.percent,color=Status))+geom_point(size=3)+geom_hline(yintercept=0)+pub_specs + labs(y="Pain Relief Score", x="Urinary PGEM(%baseline)", title="Post-Surgery 1")+theme(legend.position="bottom",legend.box="horizontal")
-
-
-
 
 
 
